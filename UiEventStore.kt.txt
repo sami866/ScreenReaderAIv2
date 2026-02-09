@@ -1,0 +1,17 @@
+package com.example.screenreaderv2
+
+object UiEventStore {
+
+    val events = mutableListOf<RawUiEvent>()
+
+    fun addEvent(event: RawUiEvent) {
+        events.add(event)
+
+        // اختياري: منع التضخم المفرط
+        if (events.size > 10_000) {
+            events.removeAt(0)
+        }
+    }
+
+    fun getAllEvents(): List<RawUiEvent> = events.toList()
+}

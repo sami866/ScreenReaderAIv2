@@ -1,0 +1,225 @@
+package com.example.screenreaderv2
+
+import android.accessibilityservice.AccessibilityService
+import android.graphics.Rect
+import android.util.Log
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import java.util.UUID
+
+class PerceptionAccessibilityService : AccessibilityService() {
+
+    companion object {
+        private const val TAG = "PerceptionService"
+    }
+
+    private var hasActiveSnapshot = false
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        Log.d(TAG, "Perception Accessibility Service Connected")
+    }
+
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent) {
+
+        // 1️⃣ سجل كل Event بدون استثناء
+        captureRawEvent(event)
+
+        // 2️⃣ هل هذا الحدث يعني أن الواجهة تغيرت فعليًا؟
+        if (isUiStructureChangingEvent(event)) {
+
+            val changeDescription = describeUiChange(event)
+
+            Log.d(TAG, "UI Change Detected → rebuilding snapshot")
+            Log.d(TAG, "UI Change Type → $changeDescription")
+
+            UiSnapshotStore.clear()
+            hasActiveSnapshot = false
+
+            captureUiSnapshot(event.packageName?.toString())
+            hasActiveSnapshot = true
+
+            dumpFullSnapshotToTimeline(changeDescription)
+        }
+
+    }
+
+    override fun onInterrupt() {
+        Log.d(TAG, "Perception Accessibility Service Interrupted")
+    }
+
+    // =========================
+    // UI Change Detection
+    // =========================
+
+
+    private fun describeUiChange(event: AccessibilityEvent): String {
+
+        val source = event.source
+        val sourceId = source?.let { generateStableNodeId(it) }
+
+        return when (event.eventType) {
+
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                "WINDOW_STATE_CHANGED → new window / screen (class=${event.className})"
+            }
+
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
+                if (sourceId != null) {
+                    "CONTENT_CHANGED → node=$sourceId class=${source?.className}"
+                } else {
+                    "CONTENT_CHANGED → global / system UI"
+                }
+            }
+
+            AccessibilityEvent.TYPE_VIEW_SCROLLED -> {
+                "VIEW_SCROLLED → node=$sourceId"
+            }
+
+            AccessibilityEvent.TYPE_VIEW_CLICKED -> {
+                "VIEW_CLICKED → node=$sourceId"
+            }
+
+            else -> {
+                "UNKNOWN_CHANGE → type=${event.eventType}"
+            }
+        }
+    }
+    private fun isUiStructureChangingEvent(event: AccessibilityEvent): Boolean {
+        return when (event.eventType) {
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
+            AccessibilityEvent.TYPE_VIEW_SCROLLED -> true
+            else -> false
+        }
+    }
+
+    private fun captureUiSnapshot(packageName: String?) {
+        val rootNode = rootInActiveWindow ?: return
+
+        traverseNode(
+            node = rootNode,
+            parentId = null,
+            packageName = packageName
+        )
+
+        Log.d(TAG, "UI Snapshot Captured: ${UiSnapshotStore.nodes.size} nodes")
+    }
+
+    private fun traverseNode(
+        node: AccessibilityNodeInfo,
+        parentId: String?,
+        packageName: String?
+    ): String {
+
+        val nodeId = UUID.randomUUID().toString()
+        val rect = Rect()
+        node.getBoundsInScreen(rect)
+
+        val rawNode = RawUiNode(
+            id = nodeId,
+            packageName = packageName ?: "",
+            className = node.className?.toString() ?: "",
+            text = node.text?.toString(),
+            contentDesc = node.contentDescription?.toString(),
+            bounds = rect,
+            clickable = node.isClickable,
+            longClickable = node.isLongClickable,
+            focusable = node.isFocusable,
+            editable = node.isEditable,
+            enabled = node.isEnabled,
+            checked = node.isChecked,
+            selected = node.isSelected,
+            scrollable = node.isScrollable,
+            visible = node.isVisibleToUser,
+            parentId = parentId,
+            childrenIds = emptyList()
+        )
+
+        UiSnapshotStore.addNode(rawNode)
+
+        val childrenIds = mutableListOf<String>()
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val childId = traverseNode(child, nodeId, packageName)
+            childrenIds.add(childId)
+        }
+
+        UiSnapshotStore.updateChildren(nodeId, childrenIds)
+        return nodeId
+    }
+
+    // =========================
+    // Event Stream
+    // =========================
+    private fun captureRawEvent(event: AccessibilityEvent) {
+
+        val sourceNodeId = event.source?.let { generateStableNodeId(it) }
+
+        val rawEvent = RawUiEvent(
+            timestamp = System.currentTimeMillis(),
+            packageName = event.packageName?.toString(),
+            className = event.className?.toString(),
+            eventType = event.eventType,
+            text = event.text,
+            contentDescription = event.contentDescription,
+            sourceNodeId = sourceNodeId
+        )
+
+        UiEventStore.addEvent(rawEvent)
+    }
+
+    private fun generateStableNodeId(node: AccessibilityNodeInfo): String {
+        val rect = Rect()
+        node.getBoundsInScreen(rect)
+        return "${node.className}_${rect.left}_${rect.top}_${rect.right}_${rect.bottom}"
+    }
+
+
+    private fun dumpFullSnapshotToTimeline(changeDesc: String) {
+
+        val sb = StringBuilder()
+
+        sb.append("\n==============================\n")
+        sb.append("UI CHANGE DETECTED\n")
+        sb.append("Type: ").append(changeDesc).append("\n")
+        sb.append("Timestamp: ").append(System.currentTimeMillis()).append("\n")
+        sb.append("==============================\n\n")
+
+        sb.append("---- UI NODES ----\n")
+        UiSnapshotStore.nodes.values.forEach { node ->
+            sb.append("NODE\n")
+            sb.append("id: ${node.id}\n")
+            sb.append("class: ${node.className}\n")
+            sb.append("package: ${node.packageName}\n")
+            sb.append("text: ${node.text}\n")
+            sb.append("desc: ${node.contentDesc}\n")
+            sb.append("bounds: ${node.bounds}\n")
+            sb.append("clickable: ${node.clickable}\n")
+            sb.append("longClickable: ${node.longClickable}\n")
+            sb.append("focusable: ${node.focusable}\n")
+            sb.append("editable: ${node.editable}\n")
+            sb.append("enabled: ${node.enabled}\n")
+            sb.append("checked: ${node.checked}\n")
+            sb.append("selected: ${node.selected}\n")
+            sb.append("scrollable: ${node.scrollable}\n")
+            sb.append("visible: ${node.visible}\n")
+            sb.append("parentId: ${node.parentId}\n")
+            sb.append("childrenCount: ${node.childrenIds.size}\n")
+            sb.append("------------------------------\n")
+        }
+
+        sb.append("\n---- RAW EVENTS (latest) ----\n")
+        UiEventStore.getAllEvents().takeLast(20).forEach { ev ->
+            sb.append(
+                "EVENT time=${ev.timestamp} " +
+                        "type=${ev.eventType} " +
+                        "class=${ev.className} " +
+                        "source=${ev.sourceNodeId}\n"
+            )
+        }
+
+        UiTimelineStore.add(sb.toString())
+    }
+}

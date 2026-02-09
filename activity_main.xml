@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center"
+    android:background="#0F0F0F">
+
+    <!-- عنوان -->
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/screenreader_v2"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- مؤشرات الحالة -->
+    <FrameLayout
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginBottom="40dp">
+
+        <!-- مؤشر ON -->
+        <ImageView
+            android:id="@+id/indicatorOn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/indicator_green"
+            android:contentDescription="@string/accessibility_on"
+            android:visibility="gone"/>
+
+        <!-- مؤشر OFF -->
+        <ImageView
+            android:id="@+id/indicatorOff"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/indicator_red"
+            android:contentDescription="@string/accessibility_off"
+            android:visibility="visible"/>
+
+    </FrameLayout>
+
+    <!-- نص الحالة -->
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/accessibility_service_status"
+        android:textColor="#B0B0B0"
+        android:textSize="14sp"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- زر التفعيل -->
+    <Button
+        android:id="@+id/btnEnableAccessibility"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/activate_accessibility_service"
+        android:layout_marginBottom="16dp"
+        android:textAllCaps="false"/>
+
+    <!-- زر الإيقاف -->
+    <Button
+        android:id="@+id/btnDisableAccessibility"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/disable_accessibility_service"
+        android:textAllCaps="false"/>
+

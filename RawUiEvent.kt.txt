@@ -1,0 +1,11 @@
+package com.example.screenreaderv2
+
+data class RawUiEvent(
+    val timestamp: Long,
+    val packageName: String?,
+    val className: String?,
+    val eventType: Int,
+    val text: List<CharSequence>?,
+    val contentDescription: CharSequence?,
+    val sourceNodeId: String?
+)

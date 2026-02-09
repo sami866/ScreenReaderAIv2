@@ -1,0 +1,41 @@
+package com.example.screenreaderv2
+
+import android.app.Activity
+import android.os.Bundle
+import android.widget.Button
+import android.widget.ScrollView
+import android.widget.TextView
+
+class MonitorActivity : Activity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val scroll = ScrollView(this)
+        val text = TextView(this)
+        val clear = Button(this)
+
+        clear.text = "CLEAR MONITOR"
+
+        val content = StringBuilder()
+        UiTimelineStore.getAll().forEach {
+            content.append(it).append("\n")
+        }
+        text.text = content.toString()
+
+        clear.setOnClickListener {
+            UiTimelineStore.clear()
+            text.text = ""
+        }
+
+        scroll.addView(text)
+
+        val root = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            addView(clear)
+            addView(scroll)
+        }
+
+        setContentView(root)
+    }
+}

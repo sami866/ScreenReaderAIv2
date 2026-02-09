@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ScreenReaderV2</string>
+    <string name="accessibility_off">Accessibility OFF</string>
+    <string name="accessibility_on">Accessibility ON</string>
+    <string name="accessibility_service_status">Accessibility Service Status</string>
+    <string name="activate_accessibility_service">Activate Accessibility Service</string>
+    <string name="disable_accessibility_service">Disable Accessibility Service</string>
+    <string name="screenreader_v2">ScreenReader V2</string>
+    <string name="accessibility_service_description">This service allows our system to observe \non-screen content and user interactions to build\nan internal screen model.No personal data is \nstored or transmitted.</string>
+
+</resources>

@@ -1,0 +1,23 @@
+package com.example.screenreaderv2
+
+import android.graphics.Rect
+
+data class RawUiNode(
+    val id: String,
+    val packageName: String,
+    val className: String,
+    val text: String?,
+    val contentDesc: String?,
+    val bounds: Rect,
+    val clickable: Boolean,
+    val longClickable: Boolean,
+    val focusable: Boolean,
+    val editable: Boolean,
+    val enabled: Boolean,
+    val checked: Boolean,
+    val selected: Boolean,
+    val scrollable: Boolean,
+    val visible: Boolean,
+    val parentId: String?,
+    val childrenIds: List<String>
+)

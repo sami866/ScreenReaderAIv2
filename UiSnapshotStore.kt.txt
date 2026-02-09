@@ -1,0 +1,21 @@
+package com.example.screenreaderv2
+
+object UiSnapshotStore {
+
+    val nodes = mutableMapOf<String, RawUiNode>()
+
+    fun clear() {
+        nodes.clear()
+    }
+
+    fun addNode(node: RawUiNode) {
+        nodes[node.id] = node
+    }
+
+    fun updateChildren(nodeId: String, childrenIds: List<String>) {
+        val old = nodes[nodeId] ?: return
+        nodes[nodeId] = old.copy(childrenIds = childrenIds)
+    }
+
+    fun getAllNodes(): List<RawUiNode> = nodes.values.toList()
+}

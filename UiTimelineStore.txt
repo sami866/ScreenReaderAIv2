@@ -1,0 +1,16 @@
+package com.example.screenreaderv2
+
+object UiTimelineStore {
+
+    private val timeline = mutableListOf<String>()
+
+    fun add(entry: String) {
+        timeline.add(entry)
+    }
+
+    fun getAll(): List<String> = timeline.toList()
+
+    fun clear() {
+        timeline.clear()
+    }
+}
