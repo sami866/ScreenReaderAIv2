@@ -2,7 +2,7 @@
 
 ## Overview
 ScreenReaderV2 is an **Android Accessibility-based prototype** focused on **capturing and analyzing real-time UI structure changes**.  
-The current stage aims to **observe, record, and reconstruct** Android user interface hierarchies and interaction events in a structured, inspectable format.
+The current stage aims to **observe, record, and reconstruct** Android user interface hierarchies and interaction events in a structured, inspectable format. 
 
 > ⚠️ This project is a research prototype and is not intended as a consumer application.
 
